@@ -1,0 +1,146 @@
+name: copilot-traces-clean
+x-logging: &logging
+  driver: local
+  options: {max-size: "10m", max-file: "3"}
+x-api-build: &api-build
+  context: ./native/source
+  dockerfile: api/Dockerfile
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:26.3.51.7
+    restart: unless-stopped
+    logging: *logging
+    mem_limit: 2g
+    environment:
+      CLICKHOUSE_DB: copilot_traces
+      CLICKHOUSE_USER: copilot
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Run python3 setup.py}
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: "1"
+    ports: ["127.0.0.1:${COPILOT_CLICKHOUSE_PORT:-13320}:8123"]
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+      - ./clickhouse/config.xml:/etc/clickhouse-server/config.d/copilot.xml:ro
+      - ./clickhouse/users.xml:/etc/clickhouse-server/users.d/copilot.xml:ro
+    tmpfs: [/var/log/clickhouse-server]
+    ulimits: {nofile: {soft: 262144, hard: 262144}}
+    healthcheck:
+      test: [CMD, bash, -c, "wget -q -O - http://127.0.0.1:8123/ping | grep -q Ok"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+  native-records:
+    image: copilot-traces-clean-native-records:local
+    build: *api-build
+    restart: unless-stopped
+    user: "${COPILOT_UID:-1000}:${COPILOT_GID:-1000}"
+    logging: *logging
+    mem_limit: 768m
+    ports: ["127.0.0.1:${COPILOT_API_PORT:-13330}:8081"]
+    environment:
+      COPILOT_STATS_API_KEY: ${COPILOT_STATS_API_KEY:?Run setup.py}
+      COPILOT_ADMIN_API_KEY: ${COPILOT_ADMIN_API_KEY:?Run setup.py}
+      COPILOT_RESEARCH_API_KEY: ${COPILOT_RESEARCH_API_KEY:-}
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: copilot_traces
+      CLICKHOUSE_USER: copilot
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Run setup.py}
+      COPILOT_GITHUB_TOKEN_FILE: /run/secrets/github_token
+      COPILOT_OTLP_TOKEN_FILE: /run/secrets/otlp_token
+      COPILOT_ENTERPRISE: ${COPILOT_ENTERPRISE:-example-enterprise}
+      # Must match the worker: these are hashed into the revision identity.
+      COPILOT_RESEARCH_MAX_SOURCE_BYTES: ${COPILOT_RESEARCH_MAX_SOURCE_BYTES:-}
+      COPILOT_RESEARCH_MAX_EVENT_BYTES: ${COPILOT_RESEARCH_MAX_EVENT_BYTES:-}
+      COPILOT_RESEARCH_MAX_RECORD_EVENT_BYTES: ${COPILOT_RESEARCH_MAX_RECORD_EVENT_BYTES:-}
+      COPILOT_RESEARCH_MAX_RECORD_SECONDS: ${COPILOT_RESEARCH_MAX_RECORD_SECONDS:-}
+      COPILOT_RESEARCH_MAX_PAGE_BYTES: ${COPILOT_RESEARCH_MAX_PAGE_BYTES:-}
+      COPILOT_RESEARCH_IDENTITY_ENABLED: ${COPILOT_RESEARCH_IDENTITY_ENABLED:-false}
+      COPILOT_RESEARCH_DEDUPE_ENABLED: ${COPILOT_RESEARCH_DEDUPE_ENABLED:-false}
+      COPILOT_COLLECTION_ENABLED: ${COPILOT_COLLECTION_ENABLED:-false}
+      COPILOT_COLLECTION_INTERVAL_SECONDS: ${COPILOT_COLLECTION_INTERVAL_SECONDS:-900}
+      COPILOT_RESEARCH_POLICY_FILE: /run/research/research-policy.json
+      COPILOT_RESEARCH_PSEUDONYM_KEY_FILE: /run/research/research-pseudonym-key
+      COPILOT_RESEARCH_RETENTION_RAW: ${COPILOT_RESEARCH_RETENTION_RAW:-}
+      COPILOT_RESEARCH_RETENTION_CURATED: ${COPILOT_RESEARCH_RETENTION_CURATED:-}
+      COPILOT_RESEARCH_RELEASE_SETTING: ${COPILOT_RESEARCH_RELEASE_SETTING:-held}
+      COPILOT_RESEARCH_DETECTOR_ENABLED: ${COPILOT_RESEARCH_DETECTOR_ENABLED:-false}
+      COPILOT_RESEARCH_DETECTOR_APPROVED: ${COPILOT_RESEARCH_DETECTOR_APPROVED:-false}
+      COPILOT_RESEARCH_DETECTOR_URL: ${COPILOT_RESEARCH_DETECTOR_URL:-}
+      COPILOT_RESEARCH_DETECTOR_MODEL: ${COPILOT_RESEARCH_DETECTOR_MODEL:-}
+      COPILOT_RESEARCH_DETECTOR_KEY_FILE: ${COPILOT_RESEARCH_DETECTOR_KEY_FILE:-}
+    secrets: [github_token, otlp_token]
+    volumes: ["./private:/run/research:ro"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      clickhouse: {condition: service_healthy}
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8081/healthz',timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+  research-worker:
+    profiles: ["research"]
+    image: copilot-traces-clean-native-records:local
+    build: *api-build
+    restart: unless-stopped
+    user: "${COPILOT_UID:-1000}:${COPILOT_GID:-1000}"
+    logging: *logging
+    mem_limit: 1g
+    cpus: 0.50
+    command: ["python", "/app/api/research_worker.py"]
+    healthcheck: {disable: true}
+    environment:
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_DATABASE: copilot_traces
+      CLICKHOUSE_USER: copilot
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD:?Run setup.py}
+      COPILOT_RESEARCH_POLICY_FILE: /run/research/research-policy.json
+      COPILOT_RESEARCH_PSEUDONYM_KEY_FILE: /run/research/research-pseudonym-key
+      COPILOT_RESEARCH_RETENTION_RAW: ${COPILOT_RESEARCH_RETENTION_RAW:-}
+      COPILOT_RESEARCH_RETENTION_CURATED: ${COPILOT_RESEARCH_RETENTION_CURATED:-}
+      COPILOT_RESEARCH_RELEASE_SETTING: ${COPILOT_RESEARCH_RELEASE_SETTING:-held}
+      COPILOT_RESEARCH_DETECTOR_ENABLED: ${COPILOT_RESEARCH_DETECTOR_ENABLED:-false}
+      COPILOT_RESEARCH_DETECTOR_APPROVED: ${COPILOT_RESEARCH_DETECTOR_APPROVED:-false}
+      COPILOT_RESEARCH_DETECTOR_URL: ${COPILOT_RESEARCH_DETECTOR_URL:-}
+      COPILOT_RESEARCH_DETECTOR_MODEL: ${COPILOT_RESEARCH_DETECTOR_MODEL:-}
+      COPILOT_RESEARCH_DETECTOR_KEY_FILE: ${COPILOT_RESEARCH_DETECTOR_KEY_FILE:-}
+      COPILOT_RESEARCH_WORKER_INTERVAL_SECONDS: ${COPILOT_RESEARCH_WORKER_INTERVAL_SECONDS:-30}
+      COPILOT_RESEARCH_PAGE_SIZE: ${COPILOT_RESEARCH_PAGE_SIZE:-10}
+      COPILOT_RESEARCH_MAX_SOURCE_BYTES: ${COPILOT_RESEARCH_MAX_SOURCE_BYTES:-}
+      COPILOT_RESEARCH_MAX_EVENT_BYTES: ${COPILOT_RESEARCH_MAX_EVENT_BYTES:-}
+      COPILOT_RESEARCH_MAX_RECORD_EVENT_BYTES: ${COPILOT_RESEARCH_MAX_RECORD_EVENT_BYTES:-}
+      COPILOT_RESEARCH_MAX_RECORD_SECONDS: ${COPILOT_RESEARCH_MAX_RECORD_SECONDS:-}
+      COPILOT_RESEARCH_MAX_PAGE_BYTES: ${COPILOT_RESEARCH_MAX_PAGE_BYTES:-}
+      COPILOT_RESEARCH_IDENTITY_ENABLED: ${COPILOT_RESEARCH_IDENTITY_ENABLED:-false}
+      COPILOT_RESEARCH_DEDUPE_ENABLED: ${COPILOT_RESEARCH_DEDUPE_ENABLED:-false}
+    volumes: ["./private:/run/research:ro"]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      clickhouse: {condition: service_healthy}
+  otel:
+    user: "${COPILOT_UID:-1000}:${COPILOT_GID:-1000}"
+    image: otel/opentelemetry-collector-contrib:0.162.0
+    restart: unless-stopped
+    logging: *logging
+    mem_limit: 256m
+    command: ["--config=/etc/otelcol/config.yaml"]
+    ports: ["127.0.0.1:${COPILOT_OTLP_HTTP_PORT:-14328}:4318", "127.0.0.1:${COPILOT_OTLP_GRPC_PORT:-14327}:4317"]
+    volumes: ["./otelcol-config.yaml:/etc/otelcol/config.yaml:ro"]
+    secrets: [otlp_token]
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    depends_on:
+      native-records: {condition: service_healthy}
+volumes:
+  clickhouse-data: {name: copilot-traces-clean-clickhouse-data}
+secrets:
+  github_token: {file: .github-token}
+  otlp_token: {file: .otlp-token}

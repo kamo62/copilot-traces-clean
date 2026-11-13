@@ -1,0 +1,14 @@
+.env
+.*-token
+data
+.git
+__pycache__
+**/__pycache__
+*.pyc
+private
+.env.*
+TASKS.md
+reports
+exports
+evidence
+backups

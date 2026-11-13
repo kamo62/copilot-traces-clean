@@ -1,0 +1,79 @@
+{
+  "contract": "privacy-eval-cases/1",
+  "dataset": {"label": "invented-synthetic-example", "provenance": "invented_synthetic", "split": "development"},
+  "thresholds": {
+    "version": "example-thresholds-1", "state": "proposed", "approved_by": null,
+    "min_removal_rate": 1.0, "min_preservation_rate": 1.0, "max_unexpected_holds": 0,
+    "max_missed_holds": 0, "max_type_changes": 0, "max_errors": 0
+  },
+  "cases": [
+    {
+      "id": "credential-in-prose",
+      "payload": {"text": "Fix the failing retry test. Use Bearer abcdefghijklmnopqrstuvwxyz0123 and key sk-INVENTED0123456789abcd for the call."},
+      "must_remove": [
+        {"value": "abcdefghijklmnopqrstuvwxyz0123", "category": "credential"},
+        {"value": "sk-INVENTED0123456789abcd", "category": "credential"}
+      ],
+      "must_keep": [{"value": "Fix the failing retry test", "category": "developer_intent"}]
+    },
+    {
+      "id": "organisation-person-repository",
+      "payload": {"text": "Alex Example at Example Holdings asked me to add a retry to the quote endpoint in example-holdings/pricing-service for Comet Pricing."},
+      "must_remove": [
+        {"value": "Alex Example", "category": "person"},
+        {"value": "Example Holdings", "category": "organisation"},
+        {"value": "example-holdings/pricing-service", "category": "repository"},
+        {"value": "Comet Pricing", "category": "product"}
+      ],
+      "must_keep": [{"value": "add a retry to the quote endpoint", "category": "developer_intent"}]
+    },
+    {
+      "id": "tool-arguments-and-path",
+      "payload": {"name": "read_file", "arguments": {"path": "/home/alex/repos/company-pricing/src/quoting/QuoteEngine.cs",
+                  "timeout": 30, "recursive": true, "patterns": ["*.cs"]}},
+      "must_remove": [
+        {"value": "/home/alex", "category": "path"},
+        {"value": "company-pricing", "category": "path"},
+        {"value": "QuoteEngine", "category": "path"}
+      ],
+      "must_keep": [{"value": "read_file", "category": "tool_name"}],
+      "argument_types": [
+        {"path": ["arguments", "timeout"], "type": "integer"},
+        {"path": ["arguments", "recursive"], "type": "boolean"},
+        {"path": ["arguments", "patterns"], "type": "array"},
+        {"path": ["arguments", "path"], "type": "object"}
+      ]
+    },
+    {
+      "id": "contact-host-work-item",
+      "payload": {"text": "Ticket PRICING-1234: ask alex@example.com about https://pricing.internal.example/v1/quotes from 10.2.3.4 and then rerun the unit tests."},
+      "must_remove": [
+        {"value": "PRICING-1234", "category": "work_item"},
+        {"value": "alex@example.com", "category": "contact"},
+        {"value": "pricing.internal.example", "category": "host"},
+        {"value": "10.2.3.4", "category": "network"}
+      ],
+      "must_keep": [{"value": "rerun the unit tests", "category": "developer_intent"}]
+    },
+    {
+      "id": "intentional-hold-embedded-credentials",
+      "payload": {"text": "config: {\"credentials\": {\"user\": \"invented\", \"value\": \"placeholder\"}}"},
+      "expect_hold": "embedded_credential_container",
+      "must_remove": [{"value": "placeholder", "category": "credential"}]
+    },
+    {
+      "id": "intentional-hold-ambiguous-identity",
+      "payload": {"repository": {"name": "pricing-service", "description": "free text that cannot be classified"}},
+      "expect_hold": "ambiguous_identity_field"
+    },
+    {
+      "id": "plain-developer-intent-preserved",
+      "payload": {"text": "Please keep python 3.11 and the helper calculate_total in the unit test, then explain the rounding."},
+      "must_keep": [
+        {"value": "keep python 3.11", "category": "developer_intent"},
+        {"value": "calculate_total", "category": "code_symbol"},
+        {"value": "explain the rounding", "category": "developer_intent"}
+      ]
+    }
+  ]
+}

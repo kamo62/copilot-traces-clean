@@ -1,0 +1,19 @@
+{
+  "telemetry": {
+    "enabled": true,
+    "endpoint": "http://127.0.0.1:14328",
+    "protocol": "http/protobuf",
+    "capture": {
+      "identity": true,
+      "prompts": true,
+      "responses": true,
+      "toolArguments": true,
+      "toolOutput": true,
+      "policyDetail": true
+    },
+    "captureContent": true,
+    "headers": {
+      "Authorization": "Bearer REPLACE_WITH_A_PROVISIONED_TOKEN"
+    }
+  }
+}
