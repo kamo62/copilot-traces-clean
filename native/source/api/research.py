@@ -97,7 +97,7 @@ EXPORT_PAGE_SETTINGS = ' SETTINGS max_threads=1,max_block_size=1024'
 EVENT_SCHEMA = {
     '$schema': 'https://json-schema.org/draft/2020-12/schema',
     '$id': EXPORT_SCHEMA_URL,
-    'title': 'Copilot Traces research event',
+    'title': 'Traces Clean research event',
     'description': 'One sanitised research event per JSONL line. Exact timestamps, original IDs and source data are not exported. Conversation coverage is unknown.',
     'type': 'object',
     'additionalProperties': False,

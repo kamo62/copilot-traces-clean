@@ -109,7 +109,7 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(200,openapi.SPECIFICATION)
             return
         if parsed.path == '/':
-            self.reply(200,{'service':'copilot-traces','version':openapi.SPECIFICATION['info']['version'],
+            self.reply(200,{'service':'traces-clean','version':openapi.SPECIFICATION['info']['version'],
                             'docs':'/docs','openapi':'/openapi.json','frontend':False,
                             'research_format':'research-event/2 JSONL or gzip; released revisions only'})
             return

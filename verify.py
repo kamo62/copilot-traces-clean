@@ -56,7 +56,7 @@ def token_expiry(token, now=None):
     """
     now=now or datetime.now(timezone.utc)
     request=urllib.request.Request('https://api.github.com/rate_limit',headers={
-        'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','User-Agent':'copilot-traces-verify'})
+        'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','User-Agent':'traces-clean-verify'})
     with urllib.request.urlopen(request,timeout=20) as response:
         expires=response.headers.get('github-authentication-token-expiration')
     if not expires:

@@ -10,7 +10,7 @@ RESEARCH = {'responses':{'200':{'description':'Content-free or bounded research 
                          '404':{'description':'Released revision not found'},
                          '409':{'description':'Hold: revision not released, invalid detector output or release gate failed'},
                          '503':{'description':'ClickHouse unavailable'}}}
-SPECIFICATION = {'openapi':'3.1.0','info':{'title':'Copilot Traces','version':'0.0.1',
+SPECIFICATION = {'openapi':'3.1.0','info':{'title':'Traces Clean','version':'0.0.1',
     'description':('Independent detailed log and tool-content investigation for upskilling and future warehouse assessment. '
                    'The admin role can inspect raw evidence and publish a curated revision; the '
                    'separate research role can only read a released, sanitised revision through bounded JSONL/gzip exports. '

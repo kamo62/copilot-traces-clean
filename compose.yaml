@@ -1,4 +1,4 @@
-name: copilot-traces-clean
+name: traces-clean
 x-logging: &logging
   driver: local
   options: {max-size: "10m", max-file: "3"}
@@ -30,7 +30,7 @@ services:
       retries: 10
       start_period: 30s
   native-records:
-    image: copilot-traces-clean-native-records:local
+    image: traces-clean-native-records:local
     build: *api-build
     restart: unless-stopped
     user: "${COPILOT_UID:-1000}:${COPILOT_GID:-1000}"
@@ -83,7 +83,7 @@ services:
       retries: 3
   research-worker:
     profiles: ["research"]
-    image: copilot-traces-clean-native-records:local
+    image: traces-clean-native-records:local
     build: *api-build
     restart: unless-stopped
     user: "${COPILOT_UID:-1000}:${COPILOT_GID:-1000}"
@@ -140,7 +140,7 @@ services:
     depends_on:
       native-records: {condition: service_healthy}
 volumes:
-  clickhouse-data: {name: copilot-traces-clean-clickhouse-data}
+  clickhouse-data: {name: traces-clean-clickhouse-data}
 secrets:
   github_token: {file: .github-token}
   otlp_token: {file: .otlp-token}

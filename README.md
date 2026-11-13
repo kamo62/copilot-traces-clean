@@ -1,4 +1,4 @@
-# Copilot Traces
+# Traces Clean
 
 A headless, open-source backend for collecting authorised GitHub Copilot records,
 investigating client telemetry and preparing versioned research exports. It is
@@ -32,9 +32,9 @@ remain disabled by default; content-repeat annotations do not suppress payloads.
 This edition includes no collected employee traces, database dumps, private
 policies, credentials, deployment evidence or server connection helper.
 
-- Compose project: `copilot-traces-clean`.
-- Database volume: `copilot-traces-clean-clickhouse-data`.
-- Local API image: `copilot-traces-clean-native-records:local`.
+- Compose project: `traces-clean`.
+- Database volume: `traces-clean-clickhouse-data`.
+- Local API image: `traces-clean-native-records:local`.
 - All published ports bind to loopback.
 - Default collection enterprise: `example-enterprise`, not a configured organisation.
 - Automatic collection is off, the research worker is opt-in and release is held.
