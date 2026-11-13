@@ -1,0 +1,18 @@
+* text=auto eol=lf
+.env export-ignore
+.env.* export-ignore
+.env.example -export-ignore
+.*-token export-ignore
+private/** export-ignore
+data/** export-ignore
+**/__pycache__/** export-ignore
+*.pyc export-ignore
+*.sqlite* export-ignore
+*.db export-ignore
+*.jsonl* export-ignore
+reports/** export-ignore
+exports/** export-ignore
+evidence/** export-ignore
+backups/** export-ignore
+*.md export-ignore
+/README.md -export-ignore
