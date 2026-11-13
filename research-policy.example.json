@@ -1,0 +1,45 @@
+{
+  "policy_version": "2026-10-20.2",
+  "scope": "copilot-traces-research-poc",
+  "reference_scope": "revision",
+  "aliases": {
+    "organisations": [
+      "Example Holdings",
+      "example-holdings",
+      "example_holdings"
+    ],
+    "people": [
+      "Alex Example",
+      "alex.example"
+    ],
+    "products": [
+      "Comet Pricing",
+      "comet-pricing"
+    ],
+    "repositories": [
+      "example-holdings/pricing-service"
+    ],
+    "hosts": [
+      "pricing.internal.example"
+    ],
+    "work_items": [
+      "PRICING-1234"
+    ]
+  },
+  "withhold_keys": [
+    "headers",
+    "authorization",
+    "cookie",
+    "set-cookie",
+    "x-api-key",
+    "system_prompt"
+  ],
+  "assisted_detector": {
+    "enabled": false,
+    "policy_version": "disabled"
+  },
+  "retention": {
+    "raw": "manual",
+    "curated": "manual"
+  }
+}

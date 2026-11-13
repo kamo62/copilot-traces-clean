@@ -1,0 +1,31 @@
+<clickhouse>
+  <logger><level>fatal</level><console>true</console><log>/var/log/clickhouse-server/clickhouse-server.log</log><errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog></logger>
+  <query_log remove="1"/><query_thread_log remove="1"/><text_log remove="1"/>
+  <trace_log remove="1"/><processors_profile_log remove="1"/>
+  <!-- Keep 512 MiB outside the tracked budget in the 2 GiB container. -->
+  <max_server_memory_usage>1610612736</max_server_memory_usage>
+  <max_server_memory_usage_to_ram_ratio>0.75</max_server_memory_usage_to_ram_ratio>
+  <mark_cache_size>33554432</mark_cache_size>
+  <uncompressed_cache_size>0</uncompressed_cache_size>
+  <!-- Two tasks, not four threads times the default concurrency ratio of two. -->
+  <background_pool_size>2</background_pool_size>
+  <background_merges_mutations_concurrency_ratio>1</background_merges_mutations_concurrency_ratio>
+  <!-- Admission control only: already running merges may exceed this soft limit. -->
+  <merges_mutations_memory_usage_soft_limit>268435456</merges_mutations_memory_usage_soft_limit>
+  <merges_mutations_memory_usage_to_ram_ratio>0.125</merges_mutations_memory_usage_to_ram_ratio>
+  <background_schedule_pool_size>4</background_schedule_pool_size>
+  <background_buffer_flush_schedule_pool_size>2</background_buffer_flush_schedule_pool_size>
+  <background_message_broker_schedule_pool_size>2</background_message_broker_schedule_pool_size>
+  <background_distributed_schedule_pool_size>2</background_distributed_schedule_pool_size>
+  <merge_tree>
+    <!-- These thresholds must not exceed the two available background slots. -->
+    <number_of_free_entries_in_pool_to_execute_mutation>1</number_of_free_entries_in_pool_to_execute_mutation>
+    <number_of_free_entries_in_pool_to_lower_max_size_of_merge>1</number_of_free_entries_in_pool_to_lower_max_size_of_merge>
+    <number_of_free_entries_in_pool_to_execute_optimize_entire_partition>1</number_of_free_entries_in_pool_to_execute_optimize_entire_partition>
+    <!-- Wide JSON rows need small blocks and a bounded number of input streams. -->
+    <merge_max_block_size>64</merge_max_block_size>
+    <merge_max_block_size_bytes>1048576</merge_max_block_size_bytes>
+    <max_parts_to_merge_at_once>8</max_parts_to_merge_at_once>
+    <max_bytes_to_merge_at_max_space_in_pool>268435456</max_bytes_to_merge_at_max_space_in_pool>
+  </merge_tree>
+</clickhouse>

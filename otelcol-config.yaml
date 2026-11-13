@@ -1,0 +1,33 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 64
+        auth: {authenticator: bearertokenauth}
+      http:
+        endpoint: 0.0.0.0:4318
+        max_request_body_size: 67108864
+        auth: {authenticator: bearertokenauth}
+extensions:
+  bearertokenauth:
+    filename: /run/secrets/otlp_token
+    wait_for_token_file: true
+    retry_on_failure: {enabled: true, max_retries: 0, interval: 1s}
+  health_check:
+    endpoint: 0.0.0.0:13133
+exporters:
+  otlp_http/database:
+    endpoint: http://native-records:8081
+    encoding: json
+    compression: none
+    auth: {authenticator: bearertokenauth}
+    timeout: 120s
+    sending_queue: {enabled: false}
+    retry_on_failure: {enabled: true, initial_interval: 2s, max_interval: 15s, max_elapsed_time: 60s}
+service:
+  extensions: [bearertokenauth, health_check]
+  pipelines:
+    traces: {receivers: [otlp], exporters: [otlp_http/database]}
+    logs: {receivers: [otlp], exporters: [otlp_http/database]}
+    metrics: {receivers: [otlp], exporters: [otlp_http/database]}

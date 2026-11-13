@@ -1,0 +1,10 @@
+{
+  "contract": "conversation-coverage-reference/1",
+  "capture": {"source": "invented_reference", "client": "invented-client", "client_version": "0", "task": "invented-two-step-task"},
+  "items": [
+    {"kind": "message", "role": "user", "text": "Open the invented notes file and summarise it."},
+    {"kind": "tool_call", "call_id": "call_ref_1", "name": "read_file", "arguments": {"path": "notes.txt", "limit": 20}},
+    {"kind": "tool_result", "call_id": "call_ref_1", "content": "invented notes line"},
+    {"kind": "message", "role": "assistant", "text": "The notes contain one invented line."}
+  ]
+}
